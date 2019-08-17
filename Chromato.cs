@@ -121,7 +121,7 @@ namespace ColumSim
             double dc;
 
             for(offset = idxHead - idxDiffuseHead;  idxDiffuseTail <= idxHead - offset; offset++){
-                dc = k * c[idxHead - offset] * dt;
+                dc = analyte.k * c[idxHead - offset] * dt;
                 c[idxHead-offset] -= dc;
                 product.c[idxHead-offset] += dc;
             }
