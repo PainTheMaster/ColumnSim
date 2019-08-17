@@ -116,7 +116,21 @@ namespace ColumSim
         }
 
         public void react(Chromato product){
+            int offset;
 
+            double dc;
+
+            for(offset = idxHead - idxDiffuseHead;  idxDiffuseTail <= idxHead - offset; offset++){
+                dc = k * c[idxHead - offset] * dt;
+                c[idxHead-offset] -= dc;
+                product.c[idxHead-offset] += dc;
+            }
+
+            if(product.idxHead - product.idxDiffuseHead > idxHead -idxDiffuseHead)
+                product.idxDiffuseHead = product.idxHead - (idxHead - idxDiffuseHead);
+                
+            if(product.idxDiffuseTail - product.idxTail > idxDiffuseTail - idxTail)
+                product.idxDiffuseTail = product.idxTail + (idxDiffuseTail - idxTail);
         }
     }
 }
