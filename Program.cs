@@ -11,7 +11,7 @@ namespace ColumSim
     {
         static void Main()
         {
-            Chromato test = new Chromato();
+
         }
     }
 }
