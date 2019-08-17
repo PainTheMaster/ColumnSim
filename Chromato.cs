@@ -114,5 +114,9 @@ namespace ColumSim
             idxDiffuseHead = idxCalcHead;
             idxDiffuseTail = idxCalcTail;
         }
+
+        public void react(Chromato product){
+
+        }
     }
 }
