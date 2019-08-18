@@ -39,6 +39,7 @@ namespace ColumSim
                         double givenTTotal,
                         double givenDt)
         {
+           /* primary parameters set */
             analyte = givenAnalyte;
             injectedConc = givenInjectedConc;
             lenColumn = givenLenColumn;
@@ -47,11 +48,13 @@ namespace ColumSim
             tTotal= givenTTotal;
             dt = givenDt;
 
+            /* secondary paramers calculated and set*/
             dL = lenColumn / divColumn;
             translCount = (int)(dL / (velElu * analyte.rTransl * dt));
             numTransl = (int)(tTotal * velElu * analyte.rTransl / dL);
             numCells = numTransl + divColumn + 1;
 
+            /* cells allocated and initialized */
             c = new double[numCells];
             idxHead = divColumn - 1;
             idxTail = 0;
