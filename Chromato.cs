@@ -1,7 +1,4 @@
-﻿using System;
-
-
-namespace ColumSim
+﻿namespace ColumSim
 {
     public class Chromato
     {
@@ -21,7 +18,7 @@ namespace ColumSim
         public int numCells;
 
         /* Working variables */
-//        public int offset;
+        //        public int offset;
         public int idxHead;
         public int idxTail;
         public int idxDiffuseHead;
@@ -39,13 +36,13 @@ namespace ColumSim
                         double givenTTotal,
                         double givenDt)
         {
-           /* primary parameters set */
+            /* primary parameters set */
             analyte = givenAnalyte;
             injectedConc = givenInjectedConc;
             lenColumn = givenLenColumn;
             divColumn = givenDivColumn;
             velElu = givenVelElu;
-            tTotal= givenTTotal;
+            tTotal = givenTTotal;
             dt = givenDt;
 
             /* secondary paramers calculated and set*/
@@ -85,7 +82,7 @@ namespace ColumSim
             else
                 idxCalcHead = idxHead;
 
-            if (idxTail< idxDiffuseTail)
+            if (idxTail < idxDiffuseTail)
                 idxCalcTail = idxDiffuseTail - 1;
             else
                 idxCalcTail = idxTail;
@@ -93,9 +90,9 @@ namespace ColumSim
             idxFluxHead = idxCalcHead - idxCalcTail;
             flux = new double[idxFluxHead + 1];
 
-            for(offset =0; offset <= idxCalcHead-idxCalcTail-1; offset++)
+            for (offset = 0; offset <= idxCalcHead - idxCalcTail - 1; offset++)
             {
-                differential = (c[idxCalcHead - (offset+1)] - c[idxCalcHead - offset]) / dL;
+                differential = (c[idxCalcHead - (offset + 1)] - c[idxCalcHead - offset]) / dL;
                 flux[idxFluxHead - offset] = -1 * differential * analyte.diffuseCoeff;
             }
 
@@ -105,7 +102,7 @@ namespace ColumSim
             offset++;
             /* Now offset == 1 */
 
-            for(; offset <= idxCalcHead - idxCalcTail - 1; offset++)
+            for (; offset <= idxCalcHead - idxCalcTail - 1; offset++)
             {
                 c[idxCalcHead - offset] += flux[idxFluxHead - (offset - 1)] * dt;
                 c[idxCalcHead - offset] -= flux[idxFluxHead - offset] * dt;
@@ -118,21 +115,23 @@ namespace ColumSim
             idxDiffuseTail = idxCalcTail;
         }
 
-        public void react(Chromato product){
+        public void react(Chromato product)
+        {
             int offset;
 
             double dc;
 
-            for(offset = idxHead - idxDiffuseHead;  idxDiffuseTail <= idxHead - offset; offset++){
+            for (offset = idxHead - idxDiffuseHead; idxDiffuseTail <= idxHead - offset; offset++)
+            {
                 dc = analyte.k * c[idxHead - offset] * dt;
-                c[idxHead-offset] -= dc;
-                product.c[idxHead-offset] += dc;
+                c[idxHead - offset] -= dc;
+                product.c[idxHead - offset] += dc;
             }
 
-            if(product.idxHead - product.idxDiffuseHead > idxHead -idxDiffuseHead)
+            if (product.idxHead - product.idxDiffuseHead > idxHead - idxDiffuseHead)
                 product.idxDiffuseHead = product.idxHead - (idxHead - idxDiffuseHead);
-                
-            if(product.idxDiffuseTail - product.idxTail > idxDiffuseTail - idxTail)
+
+            if (product.idxDiffuseTail - product.idxTail > idxDiffuseTail - idxTail)
                 product.idxDiffuseTail = product.idxTail + (idxDiffuseTail - idxTail);
         }
     }
