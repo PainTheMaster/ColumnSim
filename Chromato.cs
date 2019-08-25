@@ -18,7 +18,6 @@
         public int numCells;
 
         /* Working variables */
-        //        public int offset;
         public int idxHead;
         public int idxTail;
         public int idxDiffuseHead;
