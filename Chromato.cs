@@ -1,27 +1,29 @@
-﻿namespace ColumSim
+﻿using System;
+
+namespace ColumSim
 {
     public class Chromato
     {
         /* Primary parameters */
-        public Analyte analyte;
-        public double injectedConc;
-        public double lenColumn;
-        public int divColumn;
-        public double velElu;
-        public double tTotal;
-        public double dt;
+        public Analyte analyte; //analyte in this chromatography
+        public double injectedConc; //injected conceetration of the analyte
+        public double lenColumn; //column length
+        public int divColumn; //division numbers of the column
+        public double velElu; //eluent velocity
+        public double tTotal; // total calculatin (simulation) time
+        public double dt; // time fraction. one clock corresponds to dt
 
         /* Secondary parameters */
-        public double dL;
-        public int translCount;
-        public int numTransl;
-        public int numCells;
+        public double dL; //cell length
+        public int translCount; //clocks one translation takes
+        public int numTransl; //the number traslation occurs throughout the simulation
+        public int numCells; // the number of cells needed to perform the simulation
 
         /* Working variables */
-        public int idxHead;
-        public int idxTail;
-        public int idxDiffuseHead;
-        public int idxDiffuseTail;
+        public int idxHead; // index of the column head (in). normally 0 at count==0
+        public int idxTail; // index of the column head (out). normally divColumn -1 at count ==0
+        public int idxDiffuseHead; // index of diffusion front (head-side)
+        public int idxDiffuseTail; // index of diffuxion front (tail-side)
 
 
         /* cells */
@@ -132,6 +134,13 @@
 
             if (product.idxDiffuseTail - product.idxTail > idxDiffuseTail - idxTail)
                 product.idxDiffuseTail = product.idxTail + (idxDiffuseTail - idxTail);
+        }
+
+        public void output(string filename)
+        {
+            System.IO.StreamWriter strWrt = new System.IO.StreamWriter(filename);
+
+            strWrt.Close();
         }
     }
 }
