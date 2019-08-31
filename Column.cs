@@ -140,7 +140,7 @@ namespace ColumSim
             {
                 dc = c[idxColumnHead - offset] * (1.0 - Math.Exp(-1.0 * analyte.k * dt));
                 c[idxColumnHead - offset] -= dc;
-                product.c[idxColumnHead - offset] += dc;
+                product.c[product.idxColumnHead - offset] += dc;
             }
 
             /* reflesh the products's fiffusion region */
