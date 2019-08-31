@@ -2,7 +2,7 @@
 
 namespace ColumSim
 {
-    public class Chromato
+    public class Column
     {
         /* Primary parameters */
         public Analyte analyte; //analyte in this chromatography
@@ -20,8 +20,8 @@ namespace ColumSim
         public int numCells; // the number of cells needed to perform the simulation
 
         /* Working variables */
-        public int idxHead; // index of the column head (in). normally 0 at count==0
-        public int idxTail; // index of the column head (out). normally divColumn -1 at count ==0
+        public int idxColumnHead; // index of the column head (in). normally divColumn -1 at count==0
+        public int idxColumnTail; // index of the column tail (out). normally 0 at count ==0
         public int idxDiffuseHead; // index of diffusion front (head-side)
         public int idxDiffuseTail; // index of diffuxion front (tail-side)
 
@@ -29,7 +29,8 @@ namespace ColumSim
         /* cells */
         double[] c;
 
-        public Chromato(Analyte givenAnalyte,
+        /*constructor*/
+        public Column(Analyte givenAnalyte,
                         double givenInjectedConc,
                         double givenLenColumn,
                         int givenDivColumn,
@@ -54,91 +55,104 @@ namespace ColumSim
 
             /* cells allocated and initialized */
             c = new double[numCells];
-            idxHead = divColumn - 1;
-            idxTail = 0;
+            idxColumnHead = divColumn - 1;
+            idxColumnTail = 0;
 
-            c[idxHead + 1] = injectedConc;
+            c[idxColumnHead + 1] = injectedConc;
         }
 
+        /* Translates 1 cell when this function is called: dt*translCount */
         public void translate()
         {
-            idxTail++;
-            idxHead++;
+            idxColumnTail++;
+            idxColumnHead++;
 
-            if (idxDiffuseTail < idxTail)
-                idxDiffuseTail = idxTail;
+            if (idxDiffuseTail < idxColumnTail)
+                idxDiffuseTail = idxColumnTail;
         }
 
+        /* this function should be called in every dt (every clock) */
         public void diffuse()
         {
-            int idxCalcHead, idxCalcTail;
+            int idxCalcHead, idxCalcTail; // region in which diffusion should take place in this period of time
             int idxFluxHead;
             int offset;
             double differential;
             double[] flux;
 
-
-            if (idxDiffuseHead < idxHead)
-                idxCalcHead = idxDiffuseHead + 1;
+            // firstly determine the region to calculate. Don't over-run!
+            if (idxDiffuseHead == idxColumnHead)
+                idxCalcHead = idxColumnHead;
             else
-                idxCalcHead = idxHead;
+                idxCalcHead = idxDiffuseHead + 1;
 
-            if (idxTail < idxDiffuseTail)
+            if (idxColumnTail < idxDiffuseTail)
                 idxCalcTail = idxDiffuseTail - 1;
             else
-                idxCalcTail = idxTail;
+                idxCalcTail = idxColumnTail;
 
+            // flux[idxFluxHead - i] holds flux from cell c[idxCalcHead - i] 
             idxFluxHead = idxCalcHead - idxCalcTail;
             flux = new double[idxFluxHead + 1];
 
+            /* calculate the flux */
             for (offset = 0; offset <= idxCalcHead - idxCalcTail - 1; offset++)
             {
                 differential = (c[idxCalcHead - (offset + 1)] - c[idxCalcHead - offset]) / dL;
-                flux[idxFluxHead - offset] = -1 * differential * analyte.diffuseCoeff;
+                flux[idxFluxHead - offset] = -1.0 * differential * analyte.diffuseCoeff;
             }
 
-
+            /*  calcate from the head */
             offset = 0;
             c[idxCalcHead - offset] -= flux[idxFluxHead - offset] * dt;
             offset++;
-            /* Now offset == 1 */
 
+            /* Now offset == 1, middle region */
             for (; offset <= idxCalcHead - idxCalcTail - 1; offset++)
             {
                 c[idxCalcHead - offset] += flux[idxFluxHead - (offset - 1)] * dt;
                 c[idxCalcHead - offset] -= flux[idxFluxHead - offset] * dt;
             }
-            /* Now offset == idxCalcHead - idxCalcTail */
 
+            /* Now offset == idxCalcHead - idxCalcTail: tail */
             c[idxCalcHead - offset] += flux[idxFluxHead - (offset - 1)] * dt;
 
             idxDiffuseHead = idxCalcHead;
             idxDiffuseTail = idxCalcTail;
         }
-
-        public void react(Chromato product)
+        
+        /* this method should be called in every clock (dt)*/
+        /* "this" decomposes into "product" */
+        public void react(Column product)
         {
             int offset;
 
-            double dc;
+            double dc; // change in the concentration
 
-            for (offset = idxHead - idxDiffuseHead; idxDiffuseTail <= idxHead - offset; offset++)
+            for (offset = idxColumnHead - idxDiffuseHead; idxDiffuseTail <= idxColumnHead - offset; offset++)
             {
-                dc = analyte.k * c[idxHead - offset] * dt;
-                c[idxHead - offset] -= dc;
-                product.c[idxHead - offset] += dc;
+                dc = c[idxColumnHead - offset] * (1.0 - Math.Exp(-1.0 * analyte.k * dt));
+                c[idxColumnHead - offset] -= dc;
+                product.c[idxColumnHead - offset] += dc;
             }
 
-            if (product.idxHead - product.idxDiffuseHead > idxHead - idxDiffuseHead)
-                product.idxDiffuseHead = product.idxHead - (idxHead - idxDiffuseHead);
+            /* reflesh the products's fiffusion region */
+            if (product.idxColumnHead - product.idxDiffuseHead > idxColumnHead - idxDiffuseHead)
+                product.idxDiffuseHead = product.idxColumnHead - (idxColumnHead - idxDiffuseHead);
 
-            if (product.idxDiffuseTail - product.idxTail > idxDiffuseTail - idxTail)
-                product.idxDiffuseTail = product.idxTail + (idxDiffuseTail - idxTail);
+            if (product.idxDiffuseTail - product.idxColumnTail > idxDiffuseTail - idxColumnTail)
+                product.idxDiffuseTail = product.idxColumnTail + (idxDiffuseTail - idxColumnTail);
         }
 
         public void output(string filename)
         {
+            int idxChlomato;
+
             System.IO.StreamWriter strWrt = new System.IO.StreamWriter(filename);
+
+            for(idxChlomato = 0; idxChlomato <= idxColumnTail - 1; idxChlomato++){
+                strWrt.WriteLine(idxChlomato * translCount * dt + "," + c[idxChlomato]);
+            }
 
             strWrt.Close();
         }
