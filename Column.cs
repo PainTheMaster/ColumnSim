@@ -50,7 +50,14 @@ namespace ColumSim
             /* secondary paramers calculated and set*/
             dL = lenColumn / divColumn;
             translCount = (int)(dL / (velElu * analyte.rTransl * dt));
-            numTransl = (int)(tTotal * velElu * analyte.rTransl / dL);
+            //            numTransl = (int)(tTotal * velElu * analyte.rTransl / dL);
+            numTransl = (int)(tTotal / (translCount * dt)) + 1;
+            /* 
+             Calculate numTransl by tTotal/(translCount*dt)+1.
+             If this is calulated by using primary parameters (velElu, rTransl, dt) and dL,
+             rounding error builds up, numTransl is evaluated small, and results in over-run of c[].
+             the last "1" means translation at count = 0.
+             */
             numCells = numTransl + divColumn + 1;
 
             /* cells allocated and initialized */
@@ -81,10 +88,10 @@ namespace ColumSim
             double[] flux;
 
             // firstly determine the region to calculate. Don't over-run!
-            if (idxDiffuseHead == idxColumnHead)
-                idxCalcHead = idxColumnHead;
-            else
+            if (idxDiffuseHead < idxColumnHead)
                 idxCalcHead = idxDiffuseHead + 1;
+            else
+                idxCalcHead = idxColumnHead;
 
             if (idxColumnTail < idxDiffuseTail)
                 idxCalcTail = idxDiffuseTail - 1;
